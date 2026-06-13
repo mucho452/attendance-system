@@ -1,9 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会員登録</title>
+    <style>
+        body { font-family: sans-serif; padding: 30px 20px; background-color: #f4f7f6; color: #333; }
+        .container { max-width: 400px; margin: 0 auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { font-size: 24px; margin-bottom: 20px; text-align: center; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; }
+        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        .btn-submit { width: 100%; padding: 12px; background-color: #2ecc71; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .link-back { display: block; text-align: center; margin-top: 20px; color: #7f8c8d; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>新規 会員登録</h1>
+    
+    <form id="registerForm">
+        <label for="studentId">学籍番号</label>
+        <input type="text" id="studentId" placeholder="例: 2026A123" required>
+
+        <label for="studentName">お名前</label>
+        <input type="text" id="studentName" placeholder="例: 山田太郎" required>
+
+        <button type="submit" class="btn-submit">登録して出席画面へ</button>
+    </form>
+
+    <a href="index.html" class="link-back">◀ トップに戻る</a>
+</div>
+
 <script type="module">
-  // Firebaseの機能をインポート（バージョンを最新の安定版に統一しました）
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  // mucho452さんのFirebase設定情報
   const firebaseConfig = {
     apiKey: "AIzaSyDStU4e3_ncsos4obCXpVAt4SaitfKSpk4",
     authDomain: "attendance-system-4194f.firebaseapp.com",
@@ -14,11 +46,9 @@
     measurementId: "G-4Y27410MKM"
   };
 
-  // Firebaseの初期化
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // 登録ボタンが押されたときの処理
   document.getElementById('registerForm').addEventListener('submit', async function(event) {
     event.preventDefault();
 
@@ -26,7 +56,6 @@
     const studentName = document.getElementById('studentName').value;
 
     try {
-      // 1. すでに同じ学籍番号が登録されていないかデータベースをチェック
       const userRef = doc(db, "users", studentId);
       const userSnap = await getDoc(userRef);
 
@@ -35,13 +64,11 @@
         return;
       }
 
-      // 2. データベース（usersコレクション）に新規保存
       await setDoc(doc(db, "users", studentId), {
         name: studentName,
         createdAt: new Date()
       });
 
-      // 3. ブラウザのメモ帳（LocalStorage）にも保存してログイン状態にする
       localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('studentId', studentId);
       localStorage.setItem('studentName', studentName);
@@ -55,3 +82,6 @@
     }
   });
 </script>
+
+</body>
+</html>
