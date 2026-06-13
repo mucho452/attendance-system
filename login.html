@@ -18,14 +18,11 @@
 
 <div class="container">
     <h1>ログイン</h1>
-    
     <form id="loginForm">
-        <label for="loginId">学籍番号</label>
-        <input type="text" id="loginId" placeholder="例: 2026A123" required>
-
-        <button type="submit" class="btn-submit">ログインして出席画面へ</button>
+        <label for="loginId">ID（学籍番号など）</label>
+        <input type="text" id="loginId" placeholder="登録したIDを入力" required>
+        <button type="submit" class="btn-submit">ログイン</button>
     </form>
-
     <a href="./index.html" class="link-back">◀ トップに戻る</a>
 </div>
 
@@ -48,7 +45,6 @@
 
   document.getElementById('loginForm').addEventListener('submit', async function(event) {
     event.preventDefault();
-
     const loginId = document.getElementById('loginId').value;
 
     try {
@@ -57,24 +53,25 @@
 
       if (userSnap.exists()) {
         const userData = userSnap.data();
-        
-        localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('studentId', loginId);
-        localStorage.setItem('studentName', userData.name); 
+        localStorage.setItem('studentName', userData.name);
+        localStorage.setItem('userRole', userData.role);
 
         alert(`ログインしました！こんにちは、${userData.name}さん。`);
-        // 移動命令をより確実な方法に修正
-        window.location.href = './attendance.html';
-      } else {
-        alert("学籍番号が見つかりません。初めての方は会員登録をしてください。");
-      }
 
+        // 区分を確認して自動振り分け
+        if (userData.role === 'teacher') {
+            window.location.href = './sensei.html';
+        } else {
+            window.location.href = './attendance.html';
+        }
+      } else {
+        alert("IDが見つかりません。");
+      }
     } catch (error) {
-      console.error("エラーが発生しました: ", error);
       alert("ログインに失敗しました。");
     }
   });
 </script>
-
 </body>
 </html>
