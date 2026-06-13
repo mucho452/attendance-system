@@ -29,7 +29,7 @@
         <button type="submit" class="btn-submit">登録して出席画面へ</button>
     </form>
 
-    <a href="index.html" class="link-back">◀ トップに戻る</a>
+    <a href="./index.html" class="link-back">◀ トップに戻る</a>
 </div>
 
 <script type="module">
@@ -74,7 +74,8 @@
       localStorage.setItem('studentName', studentName);
 
       alert('会員登録が完了しました！出席画面へ移動します。');
-      location.href = 'attendance.html';
+      // 移動命令をより確実な方法に修正
+      window.location.href = './attendance.html';
 
     } catch (error) {
       console.error("エラーが発生しました: ", error);
