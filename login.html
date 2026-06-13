@@ -26,15 +26,13 @@
         <button type="submit" class="btn-submit">ログインして出席画面へ</button>
     </form>
 
-    <a href="index.html" class="link-back">◀ トップに戻る</a>
+    <a href="./index.html" class="link-back">◀ トップに戻る</a>
 </div>
 
 <script type="module">
-  // Firebaseの安定版を読み込み
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  // mucho452さんのFirebase設定情報
   const firebaseConfig = {
     apiKey: "AIzaSyDStU4e3_ncsos4obCXpVAt4SaitfKSpk4",
     authDomain: "attendance-system-4194f.firebaseapp.com",
@@ -45,34 +43,29 @@
     measurementId: "G-4Y27410MKM"
   };
 
-  // Firebaseの初期化
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // ログインボタンが押されたときの処理
   document.getElementById('loginForm').addEventListener('submit', async function(event) {
     event.preventDefault();
 
     const loginId = document.getElementById('loginId').value;
 
     try {
-      // データベースから学籍番号を検索
       const userRef = doc(db, "users", loginId);
       const userSnap = await getDoc(userRef);
 
       if (userSnap.exists()) {
-        // 学籍番号が見つかった場合（登録済み）
         const userData = userSnap.data();
         
-        // スマホにログイン情報を記憶
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('studentId', loginId);
         localStorage.setItem('studentName', userData.name); 
 
         alert(`ログインしました！こんにちは、${userData.name}さん。`);
-        location.href = 'attendance.html'; // 次の画面（出席画面）へ移動
+        // 移動命令をより確実な方法に修正
+        window.location.href = './attendance.html';
       } else {
-        // 学籍番号が見つからなかった場合（未登録）
         alert("学籍番号が見つかりません。初めての方は会員登録をしてください。");
       }
 
