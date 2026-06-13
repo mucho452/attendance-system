@@ -3,22 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>出席管理システム - トップ</title>
+    <title>出席管理システム - 認証</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px 20px; background-color: #f4f7f6; }
-        h1 { color: #333; margin-bottom: 30px; }
-        .btn { display: block; width: 100%; max-width: 300px; margin: 15px auto; padding: 15px; font-size: 18px; font-weight: bold; color: white; border: none; border-radius: 8px; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        body { font-family: sans-serif; text-align: center; padding: 50px 20px; background-color: #f4f7f6; color: #333; }
+        .container { max-width: 400px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { font-size: 26px; margin-bottom: 20px; color: #2c3e50; }
+        
+        /* キーワード入力欄のスタイル */
+        .pass-section { margin-bottom: 30px; padding: 15px; background: #edf2f7; border-radius: 8px; }
+        label { font-weight: bold; display: block; margin-bottom: 8px; font-size: 14px; color: #4a5568; }
+        input[type="text"] { width: 100%; padding: 12px; border: 2px solid #cbd5e0; border-radius: 6px; box-sizing: border-box; font-size: 16px; text-align: center; }
+        input[type="text"]:focus { border-color: #3182ce; outline: none; }
+        
+        /* ボタンのスタイル（最初は無効化されて半透明に見えるようにします） */
+        .btn-group { display: none; } /* 最初は非表示 */
+        .btn { display: block; width: 100%; max-width: 300px; margin: 15px auto; padding: 15px; font-size: 18px; font-weight: bold; color: white; border: none; border-radius: 8px; cursor: pointer; text-decoration: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s; }
         .btn-register { background-color: #2ecc71; }
         .btn-login { background-color: #3498db; }
+        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
+        
+        .error-msg { color: #e53e3e; font-size: 14px; margin-top: 5px; display: none; }
     </style>
 </head>
 <body>
 
+<div class="container">
     <h1>出席確認システム</h1>
-    <p>どちらかを選択してください</p>
     
-    <a href="register.html" class="btn btn-register">初めての方（会員登録）</a>
-    <a href="login.html" class="btn btn-login">登録済みの方（ログイン）</a>
+    <div class="pass-section">
+        <label for="keywordInput">学校の指定キーワードを入力してください</label>
+        <input type="text" id="keywordInput" placeholder="キーワードを入力">
+        <p id="errorMsg" class="error-msg">キーワードが違います</p>
+    </div>
+
+    <div id="btnGroup" class="btn-group">
+        <p>どちらかを選択してください</p>
+        <a href="register.html" class="btn btn-register">初めての方（会員登録）</a>
+        <a href="login.html" class="btn btn-login">登録済みの方（ログイン）</a>
+    </div>
+</div>
+
+<script>
+    const keywordInput = document.getElementById('keywordInput');
+    const btnGroup = document.getElementById('btnGroup');
+    const errorMsg = document.getElementById('errorMsg');
+
+    // 文字が入力されるたびにチェックする処理
+    keywordInput.addEventListener('input', function() {
+        const value = keywordInput.value.trim(); // 空白を削除
+
+        if (value === 'anankosen') {
+            // キーワードが合っていたらボタンを表示する
+            btnGroup.style.display = 'block';
+            errorMsg.style.display = 'none';
+            keywordInput.style.borderColor = '#2ecc71'; // 入力欄を緑にする
+            keywordInput.disabled = true; // 正解したら入力欄をロックする
+        } else if (value.length >= 9) {
+            // 文字数は達しているのに間違っている場合エラーを出す
+            errorMsg.style.display = 'block';
+            btnGroup.style.display = 'none';
+        } else {
+            // 入力途中はエラーを消してボタンも隠す
+            errorMsg.style.display = 'none';
+            btnGroup.style.display = 'none';
+        }
+    });
+</script>
 
 </body>
 </html>
