@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン</title>
+    <style>
+        body { font-family: sans-serif; padding: 30px 20px; background-color: #f4f7f6; color: #333; }
+        .container { max-width: 400px; margin: 0 auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { font-size: 24px; margin-bottom: 20px; text-align: center; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; }
+        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        .btn-submit { width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .link-back { display: block; text-align: center; margin-top: 20px; color: #7f8c8d; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>ログイン</h1>
+    
+    <form id="loginForm">
+        <label for="loginId">学籍番号</label>
+        <input type="text" id="loginId" placeholder="例: 2026A123" required>
+
+        <button type="submit" class="btn-submit">ログインして出席画面へ</button>
+    </form>
+
+    <a href="index.html" class="link-back">◀ トップに戻る</a>
+</div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const loginId = document.getElementById('loginId').value;
+
+    // --- 本来はここにデータベースで学籍番号を探す処理が入ります ---
+    // テスト用に、ログインされたら「名無しさん」として進める、または特定の名前を入れます
+    const dummyName = "ログインユーザー"; 
+    // --------------------------------------------------------
+
+    // ★★★ ブラウザにデータを保存（ログイン状態にする） ★★★
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('studentId', loginId);
+    localStorage.setItem('studentName', dummyName); 
+
+    alert('ログインしました！');
+
+    // 出席申請画面へ移動
+    location.href = 'attendance.html';
+});
+</script>
+
+</body>
+</html>
