@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>会員登録</title>
+    <title>新規 会員登録</title>
     <style>
         body { font-family: sans-serif; padding: 30px 20px; background-color: #f4f7f6; color: #333; }
         .container { max-width: 400px; margin: 0 auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h1 { font-size: 24px; margin-bottom: 20px; text-align: center; }
         label { font-weight: bold; display: block; margin-bottom: 5px; }
-        input[type="text"] { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        input[type="text"], select { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
         .btn-submit { width: 100%; padding: 12px; background-color: #2ecc71; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .link-back { display: block; text-align: center; margin-top: 20px; color: #7f8c8d; text-decoration: none; }
     </style>
@@ -18,17 +18,21 @@
 
 <div class="container">
     <h1>新規 会員登録</h1>
-    
     <form id="registerForm">
-        <label for="studentId">学籍番号</label>
+        <label for="studentId">ID（学籍番号など）</label>
         <input type="text" id="studentId" placeholder="例: 2026A123" required>
 
         <label for="studentName">お名前</label>
         <input type="text" id="studentName" placeholder="例: 山田太郎" required>
 
-        <button type="submit" class="btn-submit">登録して出席画面へ</button>
-    </form>
+        <label for="userRole">区分</label>
+        <select id="userRole" required>
+            <option value="student">生徒</option>
+            <option value="teacher">先生</option>
+        </select>
 
+        <button type="submit" class="btn-submit">登録して次へ</button>
+    </form>
     <a href="./index.html" class="link-back">◀ トップに戻る</a>
 </div>
 
@@ -51,38 +55,43 @@
 
   document.getElementById('registerForm').addEventListener('submit', async function(event) {
     event.preventDefault();
-
     const studentId = document.getElementById('studentId').value;
     const studentName = document.getElementById('studentName').value;
+    const role = document.getElementById('userRole').value;
 
     try {
       const userRef = doc(db, "users", studentId);
       const userSnap = await getDoc(userRef);
 
       if (userSnap.exists()) {
-        alert("この学籍番号はすでに登録されています。ログインしてください。");
+        alert("このIDはすでに登録されています。");
         return;
       }
 
+      // 区分（role）も一緒に保存
       await setDoc(doc(db, "users", studentId), {
         name: studentName,
+        role: role,
         createdAt: new Date()
       });
 
-      localStorage.setItem('isLoggedIn', 'true');
       localStorage.setItem('studentId', studentId);
       localStorage.setItem('studentName', studentName);
+      localStorage.setItem('userRole', role);
 
-      alert('会員登録が完了しました！出席画面へ移動します。');
-      // 移動命令をより確実な方法に修正
-      window.location.href = './attendance.html';
+      alert('登録が完了しました！');
+      
+      // 区分によって飛ばす先を変える
+      if (role === 'teacher') {
+          window.location.href = './sensei.html';
+      } else {
+          window.location.href = './attendance.html';
+      }
 
     } catch (error) {
-      console.error("エラーが発生しました: ", error);
-      alert("登録に失敗しました。もう一度お試しください。");
+      alert("登録に失敗しました。");
     }
   });
 </script>
-
 </body>
 </html>
