@@ -5,7 +5,6 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { useSearchParams } from 'next/navigation';
 
-// Firebase設定はそのまま
 const firebaseConfig = {
     apiKey: "AIzaSyDStU4e3_ncsos4obCXpVAt4SaitfKSpk4",
     authDomain: "attendance-system-4194f.firebaseapp.com",
@@ -39,25 +38,27 @@ export default function Home() {
                 }
             } catch (e) {
                 console.error(e);
-                setSubject("読み込みエラー");
             }
         }
         loadClass();
     }, [classId]);
 
-    // 入力するたびにチェックする
-    useEffect(() => {
-        if (keyword === 'anankosen') {
+    // 【重要】ここでキーワードをチェックする（Effectを使わない！）
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setKeyword(val);
+
+        if (val === 'anankosen') {
             setIsConfirmed(true);
             setShowError(false);
-        } else if (keyword.length >= 9) {
+        } else if (val.length >= 9) {
             setIsConfirmed(false);
             setShowError(true);
         } else {
             setIsConfirmed(false);
             setShowError(false);
         }
-    }, [keyword]);
+    };
 
     return (
         <div className="container">
@@ -71,7 +72,7 @@ export default function Home() {
                     id="keywordInput" 
                     placeholder="キーワードを入力" 
                     value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
+                    onChange={handleInputChange}
                     disabled={isConfirmed}
                 />
                 {showError && <p className="error-msg" style={{ display: 'block' }}>キーワードが違います</p>}
