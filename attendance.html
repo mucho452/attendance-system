@@ -12,13 +12,20 @@
         
         .welcome-msg { font-size: 18px; font-weight: bold; margin-bottom: 25px; color: #2c3e50; padding: 15px; background: #eef2f7; border-radius: 6px; line-height: 1.5; }
         .welcome-msg span { display: block; font-size: 14px; color: #7f8c8d; font-weight: normal; margin-top: 5px; }
-        
+
         .select-group { text-align: left; margin-bottom: 25px; }
         label { font-weight: bold; display: block; margin-bottom: 8px; color: #34495e; }
-        
-        select { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 16px; background-color: #fff; box-sizing: border-box; }
-        
-        /* === 追加：ステータス選択（ラジオボタン）のスタイル === */
+
+        .subject-box {
+            width: 100%;
+            padding: 12px;
+            background: #f9fafb;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 16px;
+            text-align: left;
+        }
+
         .status-group { display: flex; gap: 20px; margin-top: 10px; }
         .status-label { display: flex; align-items: center; font-weight: normal; cursor: pointer; font-size: 16px; }
         .status-label input { margin-right: 6px; transform: scale(1.2); }
@@ -31,23 +38,18 @@
 <body>
 
 <div class="container">
-    <div id="welcomeBox" class="welcome-msg">
-        読み込み中...
-    </div>
+    <div id="welcomeBox" class="welcome-msg">読み込み中...</div>
 
     <h1>出席登録</h1>
-    <p>該当する教科と状態を選択して、ボタンを押してください。</p>
+    <p>授業名と出席状況を確認して送信してください。</p>
     
+    <!-- 授業名（自動判別） -->
     <div class="select-group">
-        <label for="subjectSelect">教科名</label>
-        <select id="subjectSelect">
-            <option value="" disabled selected>選択してください</option>
-            <option value="signal">信号処理</option>
-            <option value="system">システム設計1</option>
-            <option value="mechanics">力学</option>
-        </select>
+        <label>教科名</label>
+        <div id="subjectName" class="subject-box">読み込み中...</div>
     </div>
 
+    <!-- 出席状況 -->
     <div class="select-group">
         <label>出席状況</label>
         <div class="status-group">
@@ -64,72 +66,88 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDStU4e3_ncsos4obCXpVAt4SaitfKSpk4",
-    authDomain: "attendance-system-4194f.firebaseapp.com",
-    projectId: "attendance-system-4194f",
-    storageBucket: "attendance-system-4194f.firebasestorage.app",
-    messagingSenderId: "775610185044",
-    appId: "1:775610185044:web:e2b101da1258dc5b4ac4c1",
-    measurementId: "G-4Y27410MKM"
-  };
+    const firebaseConfig = {
+        apiKey: "AIzaSyDStU4e3_ncsos4obCXpVAt4SaitfKSpk4",
+        authDomain: "attendance-system-4194f.firebaseapp.com",
+        projectId: "attendance-system-4194f",
+        storageBucket: "attendance-system-4194f.firebasestorage.app",
+        messagingSenderId: "775610185044",
+        appId: "1:775610185044:web:e2b101da1258dc5b4ac4c1"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  const studentId = localStorage.getItem('studentId');
-  const studentName = localStorage.getItem('studentName');
-  const welcomeBox = document.getElementById('welcomeBox');
+    /* ログイン情報チェック */
+    const studentId = localStorage.getItem('studentId');
+    const studentName = localStorage.getItem('studentName');
+    const welcomeBox = document.getElementById('welcomeBox');
 
-  if (!studentId || !studentName) {
-      alert("ログイン情報が見つかりません。トップ画面からやり直してください。");
-      window.location.href = './index.html';
-  } else {
-      welcomeBox.innerHTML = `出席確認 ${studentName} さん<span>学籍番号: ${studentId}</span>`;
-  }
-
-  // 出席ボタンを押した時の処理
-  document.getElementById('attendanceBtn').addEventListener('click', async function() {
-    const selectEl = document.getElementById('subjectSelect');
-    const selectedSubject = selectEl.options[selectEl.selectedIndex].text;
-    const selectedValue = selectEl.value;
-
-    if (!selectedValue) {
-        alert('教科を選択してください！');
-        return;
+    if (!studentId || !studentName) {
+        alert("ログイン情報が見つかりません。トップ画面からやり直してください。");
+        window.location.href = './index.html';
+    } else {
+        welcomeBox.innerHTML = `出席確認 ${studentName} さん<span>学籍番号: ${studentId}</span>`;
     }
 
-    // ★追加：選ばれているステータス（出席 or 遅刻）を取得する
-    const statusEl = document.querySelector('input[name="attendanceStatus"]:checked');
-    const currentStatus = statusEl ? statusEl.value : "出席";
+    /* URLから classId を取得 */
+    const params = new URLSearchParams(location.search);
+    const classId = params.get('classId');
 
-    try {
-      const btn = document.getElementById('attendanceBtn');
-      btn.disabled = true;
-      btn.innerText = "送信中...";
+    /* Firestore から授業名を取得 */
+    async function loadClass() {
+        if (!classId) {
+            document.getElementById('subjectName').innerText = "授業IDがありません";
+            return;
+        }
 
-      // Firebaseへ保存するデータに status を追加
-      await addDoc(collection(db, "attendances"), {
-        studentId: studentId,
-        name: studentName,
-        subject: selectedSubject,
-        status: currentStatus, // 🔥 ここで "出席" か "遅刻" が保存されるよ！
-        timestamp: serverTimestamp()
-      });
+        const snap = await getDoc(doc(db, 'attendance', classId));
+        if (!snap.exists()) {
+            document.getElementById('subjectName').innerText = "授業が見つかりません";
+            return;
+        }
 
-      window.location.href = './history.html';
-
-    } catch (error) {
-      console.error("Firebaseへの送信に失敗しました:", error);
-      alert("送信に失敗しました。もう一度試してください。");
-      const btn = document.getElementById('attendanceBtn');
-      btn.disabled = false;
-      btn.innerText = "出席を送信する";
+        const cls = snap.data();
+        document.getElementById('subjectName').innerText = cls.subject || "授業名なし";
     }
-  });
+
+    loadClass();
+
+    /* 出席送信処理 */
+    document.getElementById('attendanceBtn').addEventListener('click', async function() {
+        const subject = document.getElementById('subjectName').innerText;
+
+        const statusEl = document.querySelector('input[name="attendanceStatus"]:checked');
+        const currentStatus = statusEl ? statusEl.value : "出席";
+
+        try {
+            const btn = document.getElementById('attendanceBtn');
+            btn.disabled = true;
+            btn.innerText = "送信中...";
+
+            await addDoc(collection(db, `attendance/${classId}/students`), {
+                studentId: studentId,
+                name: studentName,
+                subject: subject,
+                status: currentStatus,
+                timestamp: serverTimestamp()
+            });
+
+            alert("出席登録が完了しました！");
+            window.location.href = './history.html';
+
+        } catch (error) {
+            console.error("送信失敗:", error);
+            alert("送信に失敗しました。もう一度試してください。");
+            const btn = document.getElementById('attendanceBtn');
+            btn.disabled = false;
+            btn.innerText = "出席を送信する";
+        }
+    });
 </script>
+
 </body>
 </html>
