@@ -88,6 +88,8 @@
 
     <a href="./attendance.html" class="btn-back">出席画面に戻る</a>
     <br>
+    <button id="csvBtn" onclick="downloadCSV()" style="width:100%;padding:12px;font-size:14px;font-weight:bold;color:#4a5568;background:#edf2f7;border:1px solid #cbd5e0;border-radius:8px;cursor:pointer;margin-top:12px;">📥 CSVダウンロード</button>
+    <br>
     <a href="./index.html" class="logout">ログアウトしてトップへ</a>
 </div>
 
@@ -215,7 +217,76 @@
     } else {
         titleEl.innerText = `あなたの出席履歴（${subjectName}）`;
         const filtered = allAttendanceData.filter(item => item.subject === subjectName);
-        displayData(filtered); // フィルターされたリストを渡すと自動でその教科だけのカウントになる
+        displayData(filtered);
+    }
+  }
+
+  window.downloadCSV = function() {
+    if (allAttendanceData.length === 0) {
+      alert('出力するデータがありません');
+      return;
+    }
+
+    const activeBtn = document.querySelector('.btn-filter.active');
+    const activeSubject = activeBtn ? activeBtn.textContent.trim() : 'すべて';
+
+    function toTimeString(data) {
+      if (!data.timestamp) return '';
+      const date = data.timestamp.toDate();
+      const y  = date.getFullYear();
+      const mo = String(date.getMonth()+1).padStart(2,'0');
+      const d  = String(date.getDate()).padStart(2,'0');
+      const h  = String(date.getHours()).padStart(2,'0');
+      const mi = String(date.getMinutes()).padStart(2,'0');
+      return `${y}/${mo}/${d} ${h}:${mi}`;
+    }
+
+    function toStatus(data) {
+      return (data.status || '出席') === '遅刻' ? '遅刻' : '出席';
+    }
+
+    function downloadBlob(csv, filename) {
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+
+    if (activeSubject === 'すべて') {
+      // 全授業を1ファイルに・授業ごとにブロック分け
+      const groups = {};
+      allAttendanceData.forEach(data => {
+        const subject = data.subject || '不明';
+        if (!groups[subject]) groups[subject] = [];
+        groups[subject].push({ status: toStatus(data), timeString: toTimeString(data) });
+      });
+
+      let csv = '';
+      Object.entries(groups).forEach(([subject, rows]) => {
+        csv += `${subject}\n`;
+        csv += '状態,出席日時\n';
+        rows.forEach(r => { csv += `"${r.status}","${r.timeString}"\n`; });
+        csv += '\n';
+      });
+
+      downloadBlob(csv, `出席履歴_全授業_${today}.csv`);
+
+    } else {
+      // フィルター中の授業だけ単独ファイル
+      const targetData = allAttendanceData.filter(item => item.subject === activeSubject);
+
+      let csv = `${activeSubject}\n`;
+      csv += '状態,出席日時\n';
+      targetData.forEach(data => {
+        csv += `"${toStatus(data)}","${toTimeString(data)}"\n`;
+      });
+
+      downloadBlob(csv, `出席履歴_${activeSubject}_${today}.csv`);
     }
   }
 </script>
