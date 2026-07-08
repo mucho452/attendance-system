@@ -10,14 +10,7 @@
         h1 { font-size: 28px; color: #2ecc71; margin-bottom: 10px; }
         .success-icon { font-size: 48px; color: #2ecc71; margin-bottom: 15px; }
         p { font-size: 16px; color: #4a5568; }
-        
-        /* 教科切り替えボタンのスタイル */
-        .filter-group { display: flex; justify-content: space-between; gap: 5px; margin-top: 20px; margin-bottom: 15px; flex-wrap: wrap; }
-        .btn-filter { flex: 1; min-width: 80px; padding: 8px 5px; font-size: 12px; font-weight: bold; background-color: #edf2f7; color: #4a5568; border: 1px solid #cbd5e0; border-radius: 6px; cursor: pointer; transition: 0.2s; }
-        .btn-filter:hover { background-color: #e2e8f0; }
-        .btn-filter.active { background-color: #2ecc71; color: white; border-color: #2ecc71; }
 
-        /* === 追加：集計ボックスのスタイル === */
         .summary-box { display: flex; justify-content: space-around; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 20px; }
         .summary-item { text-align: center; }
         .summary-label { font-size: 12px; color: #718096; margin-bottom: 4px; font-weight: bold; }
@@ -25,7 +18,6 @@
         .count-present { color: #2ecc71; }
         .count-late { color: #f1c40f; }
 
-        /* 出席状況の表のスタイル */
         .history-section { margin-top: 15px; text-align: left; }
         .history-section h2 { font-size: 18px; color: #2c3e50; border-left: 5px solid #2ecc71; padding-left: 10px; margin-bottom: 15px; }
         table { width: 100%; border-collapse: collapse; background: white; font-size: 14px; }
@@ -34,7 +26,6 @@
         tr:hover { background-color: #f8fafc; }
         .no-data { text-align: center; color: #a0aec0; padding: 20px; font-style: italic; }
 
-        /* 状態（出席・遅刻）のバッジ風デザイン */
         .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         .status-present { background-color: #e8f8f5; color: #2ecc71; }
         .status-late { background-color: #fef9e7; color: #f1c40f; }
@@ -48,14 +39,7 @@
 <div class="container">
     <div class="success-icon">✓</div>
     <h1>出席登録が完了しました！</h1>
-    <p>現在の出席状況は以下の通りです。</p>
-
-    <div class="filter-group">
-        <button class="btn-filter active" onclick="filterSubject('all')">すべて</button>
-        <button class="btn-filter" onclick="filterSubject('信号処理')">信号処理</button>
-        <button class="btn-filter" onclick="filterSubject('システム設計1')">システム設計1</button>
-        <button class="btn-filter" onclick="filterSubject('力学')">力学</button>
-    </div>
+    <p id="subjectTitle">授業名を読み込み中...</p>
 
     <div class="summary-box">
         <div class="summary-item">
@@ -69,24 +53,23 @@
     </div>
 
     <div class="history-section">
-        <h2 id="historyTitle">あなたの出席履歴（すべて）</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="margin: 0;">あなたの出席履歴</h2>
+        </div>
         <table>
             <thead>
                 <tr>
-                    <th>教科名</th>
                     <th>状態</th>
                     <th>出席日時</th>
                 </tr>
             </thead>
             <tbody id="historyTableBody">
-                <tr>
-                    <td colspan="3" class="no-data">読み込み中...</td>
-                </tr>
+                <tr><td colspan="2" class="no-data">読み込み中...</td></tr>
             </tbody>
         </table>
     </div>
 
-    <a href="./attendance.html" class="btn-back">出席画面に戻る</a>
+    <a id="backBtn" class="btn-back">出席画面に戻る</a>
     <br>
     <button id="csvBtn" onclick="downloadCSV()" style="width:100%;padding:12px;font-size:14px;font-weight:bold;color:#4a5568;background:#edf2f7;border:1px solid #cbd5e0;border-radius:8px;cursor:pointer;margin-top:12px;">📥 CSVダウンロード</button>
     <br>
@@ -94,201 +77,155 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDStU4e3_ncsos4obCXpVAt4SaitfKSpk4",
-    authDomain: "attendance-system-4194f.firebaseapp.com",
-    projectId: "attendance-system-4194f",
-    storageBucket: "attendance-system-4194f.firebasestorage.app",
-    messagingSenderId: "775610185044",
-    appId: "1:775610185044:web:e2b101da1258dc5b4ac4c1",
-    measurementId: "G-4Y27410MKM"
-  };
+    const firebaseConfig = {
+        apiKey: "AIzaSyDStU4e3_ncsos4obCXpVAt4SaitfKSpk4",
+        authDomain: "attendance-system-4194f.firebaseapp.com",
+        projectId: "attendance-system-4194f",
+        storageBucket: "attendance-system-4194f.firebasestorage.app",
+        messagingSenderId: "775610185044",
+        appId: "1:775610185044:web:e2b101da1258dc5b4ac4c1"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  const studentId = localStorage.getItem('studentId');
+    const params = new URLSearchParams(location.search);
+    const classId = params.get('classId');
+    const studentId = localStorage.getItem('studentId');
 
-  let allAttendanceData = [];
+    // CSV出力で使うデータを溜める配列
+    let allAttendanceData = [];
 
-  if (!studentId) {
-      window.location.href = './index.html';
-  } else {
-      loadAttendanceHistory();
-  }
-
-  async function loadAttendanceHistory() {
-    const tableBody = document.getElementById('historyTableBody');
-    try {
-      const q = query(
-        collection(db, "attendances"),
-        where("studentId", "==", studentId)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      allAttendanceData = [];
-
-      querySnapshot.forEach((doc) => {
-        allAttendanceData.push(doc.data());
-      });
-
-      // 新しい順にソート
-      allAttendanceData.sort((a, b) => {
-        const timeA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
-        const timeB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
-        return timeB - timeA;
-      });
-
-      // 最初の表示（すべて）
-      displayData(allAttendanceData);
-
-    } catch (error) {
-      console.error(error);
-      tableBody.innerHTML = `<tr><td colspan="3" class="no-data" style="color:red;">履歴の読み込みに失敗しました</td></tr>`;
-    }
-  }
-
-  // 画面にデータを表示＋回数を集計する関数
-  window.displayData = function(dataList) {
-    const tableBody = document.getElementById('historyTableBody');
-    tableBody.innerHTML = ""; 
-
-    // ★追加：出席と遅刻のカウント用変数
-    let presentCount = 0;
-    let lateCount = 0;
-
-    if (dataList.length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="3" class="no-data">対象の出席履歴はありません</td></tr>`;
-      document.getElementById('presentCount').innerText = "0 回";
-      document.getElementById('lateCount').innerText = "0 回";
-      return;
+    if (!studentId || !classId) {
+        alert("情報が不足しています。最初からやり直してください。");
+        window.location.href = "./index.html";
     }
 
-    dataList.forEach((data) => {
-      let timeString = "日時データなし";
-      if (data.timestamp) {
-          const date = data.timestamp.toDate();
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-          const hours = String(date.getHours()).padStart(2, '0');
-          const minutes = String(date.getMinutes()).padStart(2, '0');
-          timeString = `${year}/${month}/${day} ${hours}:${minutes}`;
-      }
+    document.getElementById("backBtn").href = `./attendance.html?classId=${classId}`;
 
-      // 状態の判定とカウントの加算
-      const statusValue = data.status || "出席"; 
-      let statusHtml = "";
-      if (statusValue === "遅刻") {
-          statusHtml = `<span class="status-badge status-late">遅刻 (△)</span>`;
-          lateCount++; // 遅刻を1プラス
-      } else {
-          statusHtml = `<span class="status-badge status-present">出席 (〇)</span>`;
-          presentCount++; // 出席を1プラス
-      }
+    async function loadHistory() {
+        const subjectTitle = document.getElementById("subjectTitle");
 
-      const row = document.createElement('tr');
-      row.innerHTML = `
-          <td>${data.subject}</td>
-          <td>${statusHtml}</td>
-          <td>${timeString}</td>
-      `;
-      tableBody.appendChild(row);
-    });
+        // 授業名取得
+        const classSnap = await getDoc(doc(db, "attendance", classId));
+        const subject = classSnap.exists() ? classSnap.data().subject : "授業名なし";
+        subjectTitle.innerText = subject;
 
-    // ★追加：集計した数字を画面に反映させる
-    document.getElementById('presentCount').innerText = `${presentCount} 回`;
-    document.getElementById('lateCount').innerText = `${lateCount} 回`;
-  }
+        const tableBody = document.getElementById("historyTableBody");
+        const snap = await getDocs(collection(db, `attendance/${classId}/students`));
 
-  window.filterSubject = function(subjectName) {
-    const buttons = document.querySelectorAll('.btn-filter');
-    buttons.forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+        let presentCount = 0;
+        let lateCount = 0;
+        const rows = [];
+        
+        // 配列を一度リセット
+        allAttendanceData = [];
 
-    const titleEl = document.getElementById('historyTitle');
+        snap.forEach(docSnap => {
+            const data = docSnap.data();
+            if (data.studentId !== studentId) return;
 
-    if (subjectName === 'all') {
-        titleEl.innerText = "あなたの出席履歴（すべて）";
-        displayData(allAttendanceData);
-    } else {
-        titleEl.innerText = `あなたの出席履歴（${subjectName}）`;
-        const filtered = allAttendanceData.filter(item => item.subject === subjectName);
-        displayData(filtered);
-    }
-  }
+            // CSV用にデータを配列に保存しておく
+            allAttendanceData.push(data);
 
-  window.downloadCSV = function() {
-    if (allAttendanceData.length === 0) {
-      alert('出力するデータがありません');
-      return;
-    }
+            const time = data.timestamp?.toDate();
+            const timeStr = time
+                ? `${time.getFullYear()}/${String(time.getMonth()+1).padStart(2,"0")}/${String(time.getDate()).padStart(2,"0")} ${String(time.getHours()).padStart(2,"0")}:${String(time.getMinutes()).padStart(2,"0")}`
+                : "日時なし";
 
-    const activeBtn = document.querySelector('.btn-filter.active');
-    const activeSubject = activeBtn ? activeBtn.textContent.trim() : 'すべて';
+            const status = data.status || "出席";
 
-    function toTimeString(data) {
-      if (!data.timestamp) return '';
-      const date = data.timestamp.toDate();
-      const y  = date.getFullYear();
-      const mo = String(date.getMonth()+1).padStart(2,'0');
-      const d  = String(date.getDate()).padStart(2,'0');
-      const h  = String(date.getHours()).padStart(2,'0');
-      const mi = String(date.getMinutes()).padStart(2,'0');
-      return `${y}/${mo}/${d} ${h}:${mi}`;
+            if (status === "遅刻") lateCount++;
+            else presentCount++;
+
+            rows.push(`
+                <tr>
+                    <td>
+                        ${status === "遅刻"
+                            ? `<span class="status-badge status-late">遅刻 (△)</span>`
+                            : `<span class="status-badge status-present">出席 (〇)</span>`
+                        }
+                    </td>
+                    <td>${timeStr}</td>
+                </tr>
+            `);
+        });
+
+        // 日時が新しい順に並び替える（CSV用も連動）
+        allAttendanceData.sort((a, b) => {
+            const timeA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
+            const timeB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
+            return timeB - timeA;
+        });
+
+        document.getElementById("presentCount").innerText = `${presentCount} 回`;
+        document.getElementById("lateCount").innerText = `${lateCount} 回`;
+
+        if (rows.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="2" class="no-data">履歴がありません</td></tr>`;
+        } else {
+            tableBody.innerHTML = rows.join("");
+        }
     }
 
-    function toStatus(data) {
-      return (data.status || '出席') === '遅刻' ? '遅刻' : '出席';
-    }
+    // CSVダウンロード関数
+    window.downloadCSV = function() {
+        if (allAttendanceData.length === 0) {
+            alert('出力するデータがありません');
+            return;
+        }
 
-    function downloadBlob(csv, filename) {
-      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
+        const subjectName = document.getElementById("subjectTitle").innerText;
 
-    const today = new Date().toISOString().split('T')[0];
+        // 日時を文字に変える便利な関数
+        function toTimeString(data) {
+            if (!data.timestamp) return '日時なし';
+            const date = data.timestamp.toDate();
+            const y  = date.getFullYear();
+            const mo = String(date.getMonth()+1).padStart(2,'0');
+            const d  = String(date.getDate()).padStart(2,'0');
+            const h  = String(date.getHours()).padStart(2,'0');
+            const mi = String(date.getMinutes()).padStart(2,'0');
+            return `${y}/${mo}/${d} ${h}:${mi}`;
+        }
 
-    if (activeSubject === 'すべて') {
-      // 全授業を1ファイルに・授業ごとにブロック分け
-      const groups = {};
-      allAttendanceData.forEach(data => {
-        const subject = data.subject || '不明';
-        if (!groups[subject]) groups[subject] = [];
-        groups[subject].push({ status: toStatus(data), timeString: toTimeString(data) });
-      });
+        // 状態（出席・遅刻）を返す関数
+        function toStatus(data) {
+            return (data.status || '出席') === '遅刻' ? '遅刻' : '出席';
+        }
 
-      let csv = '';
-      Object.entries(groups).forEach(([subject, rows]) => {
-        csv += `${subject}\n`;
+        // 実際にファイルとしてダウンロードさせる処理
+        function downloadBlob(csv, filename) {
+            // Excelで文字化けしないように「\uFEFF」(BOM) をつける
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+
+        // CSVの中身を作成
+        let csv = `${subjectName}\n`;
         csv += '状態,出席日時\n';
-        rows.forEach(r => { csv += `"${r.status}","${r.timeString}"\n`; });
-        csv += '\n';
-      });
+        
+        allAttendanceData.forEach(data => {
+            csv += `"${toStatus(data)}","${toTimeString(data)}"\n`;
+        });
 
-      downloadBlob(csv, `出席履歴_全授業_${today}.csv`);
+        // ダウンロード実行
+        downloadBlob(csv, `出席履歴_${subjectName}_${today}.csv`);
+    };
 
-    } else {
-      // フィルター中の授業だけ単独ファイル
-      const targetData = allAttendanceData.filter(item => item.subject === activeSubject);
-
-      let csv = `${activeSubject}\n`;
-      csv += '状態,出席日時\n';
-      targetData.forEach(data => {
-        csv += `"${toStatus(data)}","${toTimeString(data)}"\n`;
-      });
-
-      downloadBlob(csv, `出席履歴_${activeSubject}_${today}.csv`);
-    }
-  }
+    // 最初に履歴を読み込む
+    loadHistory();
 </script>
+
 </body>
 </html>
