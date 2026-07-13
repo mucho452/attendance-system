@@ -63,11 +63,16 @@
         alert(`ログインしました！こんにちは、${userData.name}さん。`);
 
         // 区分を確認して自動振り分け
-        if (userData.role === 'teacher') {
+        if (userData.role === 'teacher' || userData.role === 'sensei') {
             window.location.href = './sensei.html';
-        } else {
+        } else if (classId) {
+            // QRコード経由（classIdがある）なら出席画面へ
             window.location.href = `./attendance.html?classId=${classId}`;
+        } else {
+            // QRコードなし（直接アクセス）なら生徒用ホームページへ
+            window.location.href = './students_home.html';
         }
+
       } else {
         alert("IDが見つかりません。");
       }

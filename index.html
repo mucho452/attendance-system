@@ -135,6 +135,23 @@
     const params = new URLSearchParams(location.search);
     const classId = params.get('classId');
 
+    if (!classId) {
+        const savedId = localStorage.getItem('studentId');
+        const savedRole = localStorage.getItem('userRole');
+        
+        if (savedId) {
+            // すでにログインしているなら、それぞれのホームページへ自動遷移
+            if (savedRole === 'teacher' || savedRole === 'sensei') {
+                window.location.href = './sensei.html';
+            } else {
+                window.location.href = './students_home.html';
+            }
+        } else {
+            // まだログインしていないなら、直接ログイン画面へ飛ばす
+            window.location.href = './login.html';
+        }
+    }
+
     /* 授業名を読み込む */
     async function loadClass() {
         const subjectName = document.getElementById('subjectName');
