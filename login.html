@@ -77,7 +77,8 @@
         alert("IDが見つかりません。");
       }
     } catch (error) {
-      alert("ログインに失敗しました。");
+      console.error(error);
+      alert("ログインに失敗しました: " + error.code + " / " + error.message);
     }
   });
 </script>
